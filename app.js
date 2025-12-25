@@ -96,21 +96,25 @@ function setupDemoMode() {
 }
 
 // --- CORE ACTIONS ---
-function sendLink(url) {
-    if (!url) return;
+function sendLink(input) {
+    if (!input) return;
 
-    // Auto-fix URL
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = 'https://' + url;
+    // Simple URL detection
+    var isUrl = /^(http|https):\/\/[^ "]+$/.test(input);
+
+    // If no protocol but looks like domain (e.g. "google.com"), add https
+    if (!isUrl && /^[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+/.test(input) && !input.includes(' ')) {
+        input = 'https://' + input;
+        isUrl = true;
     }
 
     var data = {
-        url: url,
+        content: input,
+        type: isUrl ? 'url' : 'text',
         timestamp: Date.now()
     };
 
     if (appState.mode === 'firebase') {
-        // Send til Skyen
         appState.db.ref('rooms/' + appState.currentRoom).set(data)
             .then(function () {
                 ui.linkInput.value = '';
@@ -119,32 +123,65 @@ function sendLink(url) {
                 alert("Kunne ikke sende: " + err.message);
             });
     } else {
-        // Send Lokalt
         try {
             localStorage.setItem('lld_global_link', JSON.stringify(data));
-        } catch (e) {
-            console.warn("Storage blocked, showing locally only");
-        }
-        displayLink(data); // Vis med det samme
+        } catch (e) { }
+        displayLink(data);
         ui.linkInput.value = '';
     }
 }
 
 function displayLink(data) {
-    if (!data || !data.url) return;
+    // Support old format (data.url) + new format (data.content)
+    var content = data.content || data.url;
+    if (!content) return;
 
     ui.dropZone.classList.add('active');
     document.querySelector('.empty-state').classList.add('hidden');
     ui.linkContent.classList.remove('hidden');
-    ui.actionButtons.querySelectorAll('.hidden').forEach(function (el) {
-        el.classList.remove('hidden');
-    });
 
-    ui.currentLink.href = data.url;
-    ui.currentLink.textContent = data.url;
+    // Detect type if missing (old data)
+    var isUrl = data.type === 'url' || (data.url && !data.type);
+
+    if (isUrl) {
+        // Link Style
+        ui.currentLink.href = content;
+        ui.currentLink.textContent = formatDisplayUrl(content);
+        ui.currentLink.style.pointerEvents = "auto";
+        ui.currentLink.classList.add('gradient-text');
+
+        ui.actionButtons.querySelectorAll('.hidden').forEach(function (el) {
+            el.classList.remove('hidden');
+        });
+        ui.openBtn.classList.remove('hidden');
+    } else {
+        // Text Style
+        ui.currentLink.removeAttribute('href');
+        ui.currentLink.textContent = content;
+        ui.currentLink.style.pointerEvents = "none";
+        ui.currentLink.classList.remove('gradient-text');
+
+        // Show Copy only
+        ui.actionButtons.querySelectorAll('.hidden').forEach(function (el) {
+            el.classList.remove('hidden');
+        });
+        ui.openBtn.classList.add('hidden');
+    }
 
     var time = new Date(data.timestamp).toLocaleTimeString();
-    ui.timestamp.textContent = "Sendt " + time;
+    ui.timestamp.textContent = (isUrl ? "Link" : "Tekst") + " sendt " + time;
+}
+
+function formatDisplayUrl(urlString) {
+    try {
+        var url = new URL(urlString);
+        var path = url.pathname + url.search;
+        if (path === '/' || path === '') return url.hostname;
+        if (path.length > 30) path = path.substring(0, 30) + "...";
+        return url.hostname + " " + path;
+    } catch (e) {
+        return urlString;
+    }
 }
 
 function setupEventListeners() {
@@ -154,8 +191,9 @@ function setupEventListeners() {
     });
 
     ui.copyBtn.addEventListener('click', function () {
-        if (ui.currentLink.href) {
-            navigator.clipboard.writeText(ui.currentLink.href).then(function () {
+        var val = ui.currentLink.href ? ui.currentLink.href : ui.currentLink.textContent;
+        if (val) {
+            navigator.clipboard.writeText(val).then(function () {
                 showToast("Kopieret!");
             });
         }
