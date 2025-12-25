@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="da">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Link Drop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="background-glow"></div>
+
+    <main class="container">
+        <header>
+            <h1>Live Link Drop</h1>
+            <p class="subtitle">Del links på sekunder i klasseværelset</p>
+        </header>
+
+        <div class="card glass-panel">
+
+
+            <div class="drop-zone" id="drop-zone">
+                <div class="empty-state">
+                    <p>Venter på link...</p>
+                </div>
+                <div class="link-content hidden" id="link-content">
+                    <a href="#" target="_blank" id="current-link" class="gradient-text"></a>
+                    <div class="meta-info" id="timestamp"></div>
+                </div>
+            </div>
+
+            <div class="actions" id="action-buttons">
+                <!-- Copy button is mainly hidden until there is a link, but we keep structure ready -->
+                <button id="copy-btn" class="btn secondary hidden">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Kopier Link
+                </button>
+                <button id="open-btn" class="btn secondary hidden">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    Åbn
+                </button>
+            </div>
+
+            <form id="send-form" class="send-area">
+                <input type="text" id="link-input" placeholder="Indsæt dit link her..." autocomplete="off">
+                <button type="submit" class="btn primary">
+                    SEND
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </form>
+        </div>
+
+        <div id="toast" class="toast hidden">Link kopieret!</div>
+    </main>
+
+    <!-- Firebase Compat SDKs (Virker overalt) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
